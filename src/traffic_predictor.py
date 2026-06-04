@@ -4,7 +4,10 @@ import pickle
 import numpy as np
 import logging
 from pathlib import Path
-from config import MODEL_PATH, ML_FEATURES
+from config import MODEL_PATH, MODEL_V2_PATH, ML_FEATURES, USE_LEGACY_MODEL
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -26,10 +29,24 @@ class TrafficPredictor:
             raise FileNotFoundError(f"Model not found at {model_path}")
 
         with open(model_path, 'rb') as f:
-            self.model = pickle.load(f)
+            self.model_v1 = pickle.load(f)
 
-        logger.info(f"✅ Model loaded successfully")
-        self.feature_names = ML_FEATURES
+        logger.info(f"✅ Model v1 (5-feature) loaded successfully")
+
+        # Try to load v2 model if available
+        self.model_v2 = None
+        self.use_v2 = False
+        if MODEL_V2_PATH.exists() and not USE_LEGACY_MODEL:
+            try:
+                with open(MODEL_V2_PATH, 'rb') as f:
+                    self.model_v2 = pickle.load(f)
+                self.use_v2 = True
+                logger.info(f"✅ Model v2 (50+ features) loaded successfully")
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to load v2 model, falling back to v1: {e}")
+
+        self.feature_names_v1 = ML_FEATURES
+
 
     def predict_travel_time(
         self,
@@ -40,7 +57,7 @@ class TrafficPredictor:
         is_festival_zone: int = 0
     ) -> float:
         """
-        Predict travel time in seconds for given conditions.
+        Predict travel time in seconds for given conditions (v1 model - 5 features).
 
         Args:
             hour: Hour of day (0-23)
@@ -55,8 +72,8 @@ class TrafficPredictor:
         # Prepare feature vector in exact order used during training
         features = np.array([[hour, day_of_week, month, is_raining, is_festival_zone]], dtype=float)
 
-        # Predict
-        predicted_seconds = self.model.predict(features)[0]
+        # Predict using v1 model
+        predicted_seconds = self.model_v1.predict(features)[0]
 
         return max(predicted_seconds, 30)  # Minimum 30 seconds
 
@@ -122,6 +139,64 @@ class TrafficPredictor:
             )
             results.append(t)
         return results
+
+    def predict_with_features(self, feature_dict: dict) -> float:
+        """
+        Predict travel time using comprehensive feature dictionary (v2 model - 50+ features).
+
+        This method accepts arbitrary contextual features and uses either:
+        - v2 model (50+ features) if available
+        - v1 model (5 features) as fallback, extracting relevant features
+
+        Args:
+            feature_dict: Dictionary with feature names as keys.
+                Expected keys include temporal, meteorological, event, infrastructure, topological, vehicle.
+                Example:
+                {
+                    'hour_of_day': 14,
+                    'day_of_week': 2,
+                    'month': 6,
+                    'holiday_state_ordinal': 0,
+                    'precipitation_intensity_mmhr': 5.2,
+                    'road_classification_ordinal': 3,
+                    'signals_per_km': 2.8,
+                    ...
+                }
+
+        Returns:
+            Predicted travel time in seconds
+        """
+        if self.use_v2 and self.model_v2 is not None:
+            # Use v2 model with all available features
+            try:
+                # Extract features in consistent order - import from config to get proper order
+                from config import ML_FEATURES_V2_TEMPORAL, ML_FEATURES_V2_WEATHER, ML_FEATURES_V2_EVENTS
+                feature_order = ML_FEATURES_V2_TEMPORAL + ML_FEATURES_V2_WEATHER + ML_FEATURES_V2_EVENTS
+
+                # Build feature vector, using defaults for missing features
+                feature_values = []
+                for feature_name in feature_order:
+                    value = feature_dict.get(feature_name, 0.0)
+                    feature_values.append(float(value))
+
+                features = np.array([feature_values], dtype=float)
+                predicted_seconds = self.model_v2.predict(features)[0]
+
+                return max(predicted_seconds, 30)
+
+            except Exception as e:
+                logger.warning(f"⚠️ Error using v2 model, falling back to v1: {e}")
+                # Fall back to v1 model extraction below
+
+        # Fallback: Use v1 model with extracted 5 features
+        hour = int(feature_dict.get('hour_of_day', 12))
+        day_of_week = int(feature_dict.get('day_of_week', 0))
+        month = int(feature_dict.get('month', 6))
+        is_raining = int(feature_dict.get('precipitation_intensity_mmhr', 0) > 2.0)
+        is_festival_zone = int(feature_dict.get('event_distance_km', 100) < 2.0)
+
+        return self.predict_travel_time(hour, day_of_week, month, is_raining, is_festival_zone)
+
 
 
 def test_predictor():

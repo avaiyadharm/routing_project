@@ -15,10 +15,11 @@ pip install -r requirements.txt
 python src/graph_loader.py
 
 # 2. Find optimal route
-python src/main.py --source 39.745,-75.546 --dest 39.758,-75.532 --hour 8
+.venv/bin/python src/main.py --source 39.745,-75.546 --dest 39.758,-75.532 --hour 8
+
 
 # 3. Run tests
-python -m pytest tests/ -v
+.venv/bin/python -m pytest tests/ -v
 ```
 
 **Result:** Route with 2.14 km distance in ~15.9 minutes (with Dijkstra + ML predictions)

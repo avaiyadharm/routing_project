@@ -20,7 +20,7 @@ class TestTrafficPredictor(unittest.TestCase):
 
     def test_model_loads(self):
         """Verify model loads without errors."""
-        self.assertIsNotNone(self.predictor.model)
+        self.assertIsNotNone(self.predictor.model_v1)
 
     def test_predict_returns_positive(self):
         """Verify predictions return positive values."""
