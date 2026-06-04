@@ -1,0 +1,15 @@
+# Ignore large dataset CSV files
+*.csv
+train.csv
+
+# Ignore compiled Machine Learning binary models
+*.pkl
+traffic_xgb_model.pkl
+
+# Ignore OSRM generated map graph files
+*.osrm*
+
+# Ignore Python virtual environments
+.venv/
+venv/
+__pycache__/
