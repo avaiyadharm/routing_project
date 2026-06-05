@@ -2,23 +2,20 @@
 
 A high-performance, machine learning-driven routing and fleet optimization engine designed to minimize multi-stop travel times by combining real-time contextual variables with physical road network constraints.
 
-**Status**: ✅ **PHASE 1-5 COMPLETE** — Local MVP + Google Maps Live + FastAPI REST API
+**Status**: ✅ **PHASE 1-5 COMPLETE** — Local MVP + Google Maps Live + FastAPI REST API (Free + Paid backends)
 
 ---
 
 ## 🎯 Quick Start
 
-### Option A — FastAPI REST API (Production)
+### Option A — FastAPI REST API with FREE Backend (No API Key Needed)
 
 ```bash
-# 1. Set your Google Maps API key
-export GOOGLE_MAPS_API_KEY='your-api-key-here'
-
-# 2. Activate environment & install dependencies
+# 1. Activate environment & install dependencies
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# 3. Start the API server
+# 2. Start the API server (uses free OpenStreetMap backend by default)
 python main.py
 # → Server runs at http://localhost:8000
 # → Swagger docs at http://localhost:8000/docs
@@ -29,9 +26,9 @@ python main.py
 curl -X POST http://localhost:8000/api/v1/optimize-route \
   -H "Content-Type: application/json" \
   -d '{
-    "source": "Times Square, NY",
-    "destination": "JFK Airport, NY",
-    "waypoints": ["Brooklyn Bridge, NY", "Central Park, NY"],
+    "source": "Times Square, New York",
+    "destination": "JFK Airport, New York",
+    "waypoints": ["Brooklyn Bridge, New York", "Central Park, New York"],
     "departure_hour": 8,
     "day_of_week": 0,
     "month": 6,
@@ -40,9 +37,18 @@ curl -X POST http://localhost:8000/api/v1/optimize-route \
   }'
 ```
 
-> **Prerequisites:** Enable the **Geocoding API**, **Distance Matrix API**, and **Directions API** in your [Google Cloud Console](https://console.cloud.google.com/apis/library).
+> 🆓 **No API key required!** The default `osm` backend uses OpenStreetMap Nominatim for geocoding and OSRM for routing — completely free.
 
-### Option B — Google Maps Live CLI
+### Option B — FastAPI REST API with Google Maps Backend (Paid, Live Traffic)
+
+```bash
+export GOOGLE_MAPS_API_KEY='your-api-key-here'
+GEO_BACKEND=google python main.py
+```
+
+> Requires **Geocoding API**, **Distance Matrix API**, and **Directions API** enabled in [Google Cloud Console](https://console.cloud.google.com/apis/library).
+
+### Option C — Google Maps Interactive CLI
 
 ```bash
 export GOOGLE_MAPS_API_KEY='your-api-key-here'
@@ -50,11 +56,10 @@ source .venv/bin/activate
 python route_optimizer_live.py
 ```
 
-### Option C — Local Offline Routing (Legacy)
+### Option D — Local Offline Routing (Legacy)
 
 ```bash
 source .venv/bin/activate
-pip install -r requirements.txt
 python src/graph_loader.py
 .venv/bin/python src/main.py --source 39.745,-75.546 --dest 39.758,-75.532 --hour 8
 ```
