@@ -2,48 +2,61 @@
 
 A high-performance, machine learning-driven routing and fleet optimization engine designed to minimize multi-stop travel times by combining real-time contextual variables with physical road network constraints.
 
-**Status**: ✅ **PHASE 1-4 COMPLETE** — Local MVP + Google Maps Live Production
+**Status**: ✅ **PHASE 1-5 COMPLETE** — Local MVP + Google Maps Live + FastAPI REST API
 
 ---
 
 ## 🎯 Quick Start
 
-### Option A — Google Maps Live Production (Recommended)
+### Option A — FastAPI REST API (Production)
 
 ```bash
-# 1. Set your Google Maps API key (one-time)
+# 1. Set your Google Maps API key
 export GOOGLE_MAPS_API_KEY='your-api-key-here'
 
 # 2. Activate environment & install dependencies
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# 3. Run the live optimizer (interactive CLI)
-python route_optimizer_live.py
+# 3. Start the API server
+python main.py
+# → Server runs at http://localhost:8000
+# → Swagger docs at http://localhost:8000/docs
 ```
 
-The script will prompt you for:
-- **Source** & **Destination** as address strings (e.g. `Times Square, NY`)
-- **Waypoints** separated by semicolons (e.g. `Brooklyn Bridge, NY; Central Park, NY`)
-- **Departure time** (`HH:MM`), **day of week**, **weather**, and **event** flags
-
-**Result:** Optimized multi-stop route via Google Distance Matrix + XGBoost ML overlay + OR-Tools solver.
+**Test it:**
+```bash
+curl -X POST http://localhost:8000/api/v1/optimize-route \
+  -H "Content-Type: application/json" \
+  -d '{
+    "source": "Times Square, NY",
+    "destination": "JFK Airport, NY",
+    "waypoints": ["Brooklyn Bridge, NY", "Central Park, NY"],
+    "departure_hour": 8,
+    "day_of_week": 0,
+    "month": 6,
+    "is_raining": 1,
+    "is_festival_zone": 0
+  }'
+```
 
 > **Prerequisites:** Enable the **Geocoding API**, **Distance Matrix API**, and **Directions API** in your [Google Cloud Console](https://console.cloud.google.com/apis/library).
 
-### Option B — Local Offline Routing (Legacy)
+### Option B — Google Maps Live CLI
 
 ```bash
-# 1. Setup (first time only)
+export GOOGLE_MAPS_API_KEY='your-api-key-here'
+source .venv/bin/activate
+python route_optimizer_live.py
+```
+
+### Option C — Local Offline Routing (Legacy)
+
+```bash
 source .venv/bin/activate
 pip install -r requirements.txt
 python src/graph_loader.py
-
-# 2. Find optimal route
 .venv/bin/python src/main.py --source 39.745,-75.546 --dest 39.758,-75.532 --hour 8
-
-# 3. Run tests
-.venv/bin/python -m pytest tests/ -v
 ```
 
 **Result:** Route with 2.14 km distance in ~15.9 minutes (with Dijkstra + ML predictions)
