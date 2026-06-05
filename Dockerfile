@@ -20,7 +20,7 @@ WORKDIR /app
 
 # Copy only the compiled packages from the builder stage
 COPY --from=builder /install /usr/local
-COPY optimize_route.py .
+COPY main.py .
 
 # Run the python app immediately when the container spins up
-CMD ["python", "optimize_route.py"]
+CMD ["python", "main.py"]

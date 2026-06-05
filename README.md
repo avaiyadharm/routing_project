@@ -53,7 +53,7 @@ GEO_BACKEND=google python main.py
 ```bash
 export GOOGLE_MAPS_API_KEY='your-api-key-here'
 source .venv/bin/activate
-python route_optimizer_live.py
+python src/route_optimizer_live.py
 ```
 
 ### Option D — Local Offline Routing (Legacy)
@@ -61,7 +61,7 @@ python route_optimizer_live.py
 ```bash
 source .venv/bin/activate
 python src/graph_loader.py
-.venv/bin/python src/main.py --source 39.745,-75.546 --dest 39.758,-75.532 --hour 8
+.venv/bin/python src/legacy_offline_cli.py --source 39.745,-75.546 --dest 39.758,-75.532 --hour 8
 ```
 
 **Result:** Route with 2.14 km distance in ~15.9 minutes (with Dijkstra + ML predictions)
