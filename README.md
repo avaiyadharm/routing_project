@@ -18,7 +18,7 @@ pip install -r requirements.txt
 # 2. Start the API server (uses free OpenStreetMap backend by default)
 python main.py
 # → Server runs at http://localhost:8000
-# → Swagger docs at http://localhost:8000/docs
+# → Swagger docs at   
 ```
 
 **Test it:**
